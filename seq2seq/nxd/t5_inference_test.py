@@ -6,18 +6,20 @@ import t5_models
 from wrapper import T5Wrapper
 
 
-model_name = "google/flan-t5-xl" 
+# model_name = "google/flan-t5-xl"
+model_name = "google-t5/t5-large"
 max_length = 128
 num_beams = 4
-tp_degree = 8 # tensor parallelism degree
+# tp_degree = 8 # tensor parallelism degree
+tp_degree = 2 # tensor parallelism degree
 
 model = T5ForConditionalGeneration.from_pretrained(model_name, torch_dtype="auto")
-# torch.save({"model":model.state_dict()}, model_name.split("/")[-1] + ".pt")
-# model.config.use_cache = True
+torch.save({"model":model.state_dict()}, model_name.split("/")[-1] + ".pt")
+model.config.use_cache = True
 
 
 if __name__ == '__main__':
-    # [Compile Encoder] This can take up to 20 minutes
+    # # [Compile Encoder] This can take up to 20 minutes
     # encoder_compile_start_time = time.time()
     # traced_encoder = t5_models.parallel_trace_encoder(model_name, max_length, num_beams, tp_degree)
     # print("Encoder compilation time {}".format(time.time() - encoder_compile_start_time))
@@ -30,7 +32,7 @@ if __name__ == '__main__':
     # neuronx_distributed.trace.parallel_model_save(traced_decoder, "TracedParallelDecoder.pt")
     
     # [Inference]
-    num_return_sequences = 4
+    num_return_sequences = 1
 
     traced_encoder = neuronx_distributed.trace.parallel_model_load("TracedParallelEncoder.pt")
     traced_decoder = neuronx_distributed.trace.parallel_model_load("TracedParallelDecoder.pt")

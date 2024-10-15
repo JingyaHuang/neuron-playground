@@ -361,7 +361,7 @@ class T5Wrapper(T5ForConditionalGeneration, NeuronGenerationMixin):
             if isinstance(stopping_criteria, MaxLengthCriteria):
                 stop_criterion_2 = cur_len >= stopping_criteria.max_length
             elif isinstance(stopping_criteria, MaxTimeCriteria):
-                stop_criterion_2 = stopping_criteria(input_ids, scores)
+                stop_criterion_2 = all(stopping_criteria(input_ids, scores))
             else:
                 # Other cases will be handled on CPU
                 batch_size, _ = input_ids.shape
@@ -371,7 +371,7 @@ class T5Wrapper(T5ForConditionalGeneration, NeuronGenerationMixin):
                 ).bool()
                 input_ids_cpu = torch.masked_select(input_ids_cpu, mask).reshape((batch_size, cur_len))
                 scores_cpu = scores.to("cpu") if torch.is_tensor(scores) else scores
-                stop_criterion_2 = stopping_criteria(input_ids_cpu, scores_cpu)
+                stop_criterion_2 = all(stopping_criteria(input_ids_cpu, scores_cpu))
 
             if stop_criterion_1 or stop_criterion_2:
                 if not synced_gpus:
@@ -512,7 +512,7 @@ class T5Wrapper(T5ForConditionalGeneration, NeuronGenerationMixin):
             if isinstance(stopping_criteria, MaxLengthCriteria):
                 stop_criterion_2 = seq_length >= stopping_criteria.max_length
             elif isinstance(stopping_criteria, MaxTimeCriteria):
-                stop_criterion_2 = stopping_criteria(input_ids, scores)
+                stop_criterion_2 = all(stopping_criteria(input_ids, scores))
             else:
                 # Other cases will be handled on CPU
                 batch_size, _ = input_ids.shape
@@ -522,7 +522,7 @@ class T5Wrapper(T5ForConditionalGeneration, NeuronGenerationMixin):
                 ).bool()
                 input_ids_cpu = torch.masked_select(input_ids, mask).reshape((batch_size, seq_length)).to("cpu")
                 scores_cpu = scores.to("cpu") if torch.is_tensor(scores) else scores
-                stop_criterion_2 = stopping_criteria(input_ids_cpu, scores_cpu)
+                stop_criterion_2 = all(stopping_criteria(input_ids_cpu, scores_cpu))
 
             if stop_criterion_1 or stop_criterion_2:
                 this_peer_finished = True
